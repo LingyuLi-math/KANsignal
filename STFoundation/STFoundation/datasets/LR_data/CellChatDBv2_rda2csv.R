@@ -35,10 +35,10 @@ out_dir <- "STFoundation/datasets/LR_data"
 if (!dir.exists(out_dir)) dir.create(out_dir)
 
 database <- paste0(species, "-CellChatDBv2_")
-write.csv(CellChatDB$interaction, file = file.path(out_dir, paste0(database, "interaction.csv")), row.names = FALSE)
-write.csv(CellChatDB$complex,     file = file.path(out_dir, paste0(database, "complex.csv")),     row.names = FALSE)
-write.csv(CellChatDB$cofactor,    file = file.path(out_dir, paste0(database, "cofactor.csv")),    row.names = FALSE)
-write.csv(CellChatDB$geneInfo,    file = file.path(out_dir, paste0(database, "geneInfo.csv")),    row.names = FALSE)
+write.csv(CellChatDB$interaction, file = file.path(out_dir, paste0(database, "interaction.csv")))
+write.csv(CellChatDB$complex,     file = file.path(out_dir, paste0(database, "complex.csv")))
+write.csv(CellChatDB$cofactor,    file = file.path(out_dir, paste0(database, "cofactor.csv")))
+write.csv(CellChatDB$geneInfo,    file = file.path(out_dir, paste0(database, "geneInfo.csv")))
 
 cat("Exported CellChatDB tables to", out_dir, "\n")
 
