@@ -10,6 +10,126 @@ import os
 import sys
 
 
+
+
+import os
+from typing import Optional
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import pyreadr
+import seaborn as sns
+from anndata import AnnData
+
+
+
+#######################
+## 2025.10.25 LLY add return sources_df, targets_df
+## 统计并可视化“基因程序”中每个程序所包含的source基因和target基因的数量分布
+## 两个直方图：一个显示每个基因程序中的“target”基因数量分布，另一个显示“source”基因数量分布。
+#######################
+def create_gp_gene_count_distribution_plots(
+        gp_dict: Optional[dict]=None,
+        adata: Optional[AnnData]=None,
+        gp_targets_mask_key: Optional[str]="KANsignal_gp_targets",
+        gp_sources_mask_key: Optional[str]="KANsignal_gp_sources",
+        gp_plot_label: str="",
+        save_path: Optional[str]=None):
+    """
+    Create distribution plots of the gene counts for sources and targets
+    of all gene programs in either a gp dict or an adata object.
+
+    Parameters
+    ----------
+    gp_dict:
+        A gene program dictionary.
+    adata:
+        An anndata object
+    gp_plot_label:
+        Label of the gene program plot for title.
+    """
+    # Get number of source and target genes for each gene program
+    if gp_dict is not None:
+        n_sources_list = []
+        n_targets_list = []
+        for _, gp_sources_targets_dict in gp_dict.items():
+            n_sources_list.append(len(gp_sources_targets_dict["sources"]))
+            n_targets_list.append(len(gp_sources_targets_dict["targets"]))
+    elif adata is not None:
+        n_targets_list = adata.varm[gp_targets_mask_key].sum(axis=0)
+        n_sources_list = adata.varm[gp_sources_mask_key].sum(axis=0)
+
+    
+    # Convert the arrays to a pandas DataFrame
+    targets_df = pd.DataFrame({"values": n_targets_list})
+    sources_df = pd.DataFrame({"values": n_sources_list})
+
+    # Determine plot configurations
+    max_n_targets = max(n_targets_list)
+    max_n_sources = max(n_sources_list)
+    if max_n_targets > 200:
+        targets_x_ticks_range = 100
+        xticklabels_rotation = 45  
+    elif max_n_targets > 100:
+        targets_x_ticks_range = 20
+        xticklabels_rotation = 0
+    elif max_n_targets > 10:
+        targets_x_ticks_range = 10
+        xticklabels_rotation = 0
+    else:
+        targets_x_ticks_range = 1
+        xticklabels_rotation = 0
+    if max_n_sources > 200:
+        sources_x_ticks_range = 100   
+    elif max_n_sources > 100:
+        sources_x_ticks_range = 20
+    elif max_n_sources > 10:
+        sources_x_ticks_range = 10
+    else:
+        sources_x_ticks_range = 1
+
+    # Create subplot
+    fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 5))
+    plt.suptitle(
+        f"{gp_plot_label} Gene Programs – Gene Count Distribution Plots")
+    sns.histplot(x="values", data=targets_df, ax=ax1)
+    ax1.set_title("Gene Program Targets Distribution",
+                  fontsize=10)
+    ax1.set(xlabel="Number of Targets",
+            ylabel="Number of Gene Programs")
+    ax1.set_xticks(
+        np.arange(0,
+                  max_n_targets + targets_x_ticks_range,
+                  targets_x_ticks_range))
+    ax1.set_xticklabels(
+        np.arange(0,
+                  max_n_targets + targets_x_ticks_range,
+                  targets_x_ticks_range),
+        rotation=xticklabels_rotation)
+    sns.histplot(x="values", data=sources_df, ax=ax2)
+    ax2.set_title("Gene Program Sources Distribution",
+                  fontsize=10)
+    ax2.set(xlabel="Number of Sources",
+            ylabel="Number of Gene Programs")
+    ax2.set_xticks(
+        np.arange(0,
+                  max_n_sources + sources_x_ticks_range,
+                  sources_x_ticks_range))
+    ax2.set_xticklabels(
+        np.arange(0,
+                  max_n_sources + sources_x_ticks_range,
+                  sources_x_ticks_range),
+        rotation=xticklabels_rotation)
+    plt.subplots_adjust(wspace=0.35)
+    if save_path:
+        plt.savefig(save_path)
+    plt.show()
+
+    return sources_df, targets_df
+
+
+
 ###########################################################
 # 2025.02.08 Form iStar
 #            Found infer-smooth not at same scale, so norm
